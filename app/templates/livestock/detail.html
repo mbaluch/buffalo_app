@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}{{ animal.display_name }} — Búvoli{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="/livestock">Livestock</a></li>
+    <li class="breadcrumb-item active">{{ animal.display_name }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+  <!-- Left: photo + quick info -->
+  <div class="col-md-4">
+    <!-- Primary photo -->
+    <div class="card shadow-sm mb-3">
+      {% if animal.primary_photo %}
+      <img src="/livestock/{{ animal.id }}/photos/{{ animal.primary_photo.id }}"
+           class="card-img-top" style="object-fit:cover;height:300px;"
+           alt="{{ animal.display_name }}">
+      {% else %}
+      <div class="d-flex align-items-center justify-content-center bg-light"
+           style="height:300px;">
+        <i class="bi bi-camera fs-1 text-muted"></i>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Thumbnail strip -->
+    {% if animal.photos|length > 1 %}
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      {% for photo in animal.photos %}
+      <div class="position-relative">
+        <img src="/livestock/{{ animal.id }}/photos/{{ photo.id }}/thumbnail"
+             class="rounded border {% if photo.is_primary %}border-primary border-2{% endif %}"
+             style="width:70px;height:70px;object-fit:cover;cursor:pointer;"
+             onclick="document.querySelector('.card-img-top').src='/livestock/{{ animal.id }}/photos/{{ photo.id }}'">
+        {% if can_upload_photo %}
+        <form action="/livestock/{{ animal.id }}/photos/{{ photo.id }}/delete" method="post"
+              class="position-absolute top-0 end-0">
+          <button class="btn btn-danger btn-sm p-0 px-1" type="submit"
+                  onclick="return confirm('Delete photo?')">
+            <i class="bi bi-x"></i>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Upload photo -->
+    {% if can_upload_photo %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header small fw-medium">Upload Photo</div>
+      <div class="card-body">
+        <form action="/livestock/{{ animal.id }}/photos" method="post"
+              enctype="multipart/form-data">
+          <div class="mb-2">
+            <input class="form-control form-control-sm" type="file" name="photo"
+                   accept="image/jpeg,image/png,image/webp" required>
+          </div>
+          <div class="form-check form-check-sm mb-2">
+            <input class="form-check-input" type="checkbox" name="make_primary" value="on">
+            <label class="form-check-label small">Set as primary</label>
+          </div>
+          <button class="btn btn-sm btn-outline-primary w-100" type="submit">Upload</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Status card -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="mb-2">
+          <span class="badge fs-6
+            {% if animal.pregnancy_status and animal.pregnancy_status.value == 'PREGNANT' %}
+              badge-pregnant
+            {% elif animal.is_available_for_breeding and animal.sex.value == 'FEMALE' %}
+              badge-available
+            {% else %}
+              bg-secondary
+            {% endif %}">
+            {% if animal.pregnancy_status and animal.pregnancy_status.value == 'PREGNANT' %}
+              Pregnant
+            {% elif animal.is_available_for_breeding and animal.sex.value == 'FEMALE' %}
+              Available for Breeding
+            {% elif animal.sex.value == 'MALE' %}
+              Bull
+            {% else %}
+              Unavailable
+            {% endif %}
+          </span>
+        </div>
+        {% if animal.expected_calving_date %}
+        <div class="small text-muted">
+          <i class="bi bi-calendar-event me-1"></i>
+          Expected calving: <strong>{{ animal.expected_calving_date }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: detail tabs -->
+  <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h2 class="fw-bold mb-0">{{ animal.display_name }}</h2>
+        <div class="text-muted">{{ animal.registration_number }}</div>
+      </div>
+      {% if can_edit %}
+      <a href="/livestock/{{ animal.id }}/edit" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-pencil me-1"></i>Edit
+      </a>
+      {% endif %}
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="detailTabs">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#tab-details">Details</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#tab-insemination">
+          Inseminations {% if inseminations %}<span class="badge bg-primary">{{ inseminations|length }}</span>{% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#tab-health">
+          Health Records {% if health_records %}<span class="badge bg-info">{{ health_records|length }}</span>{% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#tab-appointments">
+          Appointments {% if appointments %}<span class="badge bg-secondary">{{ appointments|length }}</span>{% endif %}
+        </a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Details tab -->
+      <div class="tab-pane fade show active" id="tab-details">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header small fw-medium">Basic Information</div>
+              <div class="card-body">
+                <dl class="row mb-0 small">
+                  <dt class="col-sm-4 text-muted">Type</dt>
+                  <dd class="col-sm-8">{{ animal.type_label }}</dd>
+                  <dt class="col-sm-4 text-muted">Sex</dt>
+                  <dd class="col-sm-8">{{ animal.sex.value }}</dd>
+                  <dt class="col-sm-4 text-muted">Status</dt>
+                  <dd class="col-sm-8">
+                    <span class="badge bg-secondary">{{ animal.status.value }}</span>
+                  </dd>
+                  <dt class="col-sm-4 text-muted">JZD</dt>
+                  <dd class="col-sm-8">{{ animal.jzd.name if animal.jzd else '—' }}</dd>
+                  <dt class="col-sm-4 text-muted">Farm</dt>
+                  <dd class="col-sm-8">
+                    {% if animal.farm %}
+                    <a href="/farms/{{ animal.farm.id }}/edit">{{ animal.farm.name }}</a>
+                    {% if animal.farm.city %}, {{ animal.farm.city }}{% endif %}
+                    {% else %}—{% endif %}
+                  </dd>
+                  {% if animal.creator %}
+                  <dt class="col-sm-4 text-muted">Registered by</dt>
+                  <dd class="col-sm-8">{{ animal.creator.full_name }}</dd>
+                  {% endif %}
+                  <dt class="col-sm-4 text-muted">Registered</dt>
+                  <dd class="col-sm-8">{{ animal.created_at.strftime('%Y-%m-%d') }}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header small fw-medium">Attributes</div>
+              <div class="card-body">
+                {% if animal.attributes %}
+                <dl class="row mb-0 small">
+                  {% for defn in attr_defs %}
+                  {% set val = animal.attributes.get(defn.attribute_key) %}
+                  {% if val is not none and val != '' %}
+                  <dt class="col-sm-4 text-muted">
+                    {{ defn.attribute_name }}
+                    {% if defn.unit %}<span class="text-muted">({{ defn.unit }})</span>{% endif %}
+                  </dt>
+                  <dd class="col-sm-8">{{ val }}</dd>
+                  {% endif %}
+                  {% endfor %}
+                </dl>
+                {% else %}
+                <p class="text-muted mb-0 small">No attributes recorded.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% if animal.farm and animal.farm.latitude %}
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header small fw-medium">Location</div>
+              <div class="card-body small">
+                <p class="mb-1">
+                  <i class="bi bi-geo-alt me-1"></i>
+                  {{ animal.farm.address or '' }}
+                  {% if animal.farm.city %}, {{ animal.farm.city }}{% endif %}
+                </p>
+                <p class="text-muted mb-0">{{ animal.farm.latitude }}, {{ animal.farm.longitude }}</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Inseminations tab -->
+      <div class="tab-pane fade" id="tab-insemination">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-medium">Recent Inseminations</span>
+          {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','INSEMINATOR','SPERM_COLLECTOR') %}
+          <a href="/inseminations/new?cow_id={{ animal.id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Record
+          </a>
+          {% endif %}
+        </div>
+        {% if inseminations %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead class="table-light"><tr><th>Date</th><th>Method</th><th>Bull</th><th>Status</th><th>Expected Calving</th></tr></thead>
+            <tbody>
+              {% for r in inseminations %}
+              {% set sc = {'PERFORMED':'primary','CONFIRMED_PREGNANT':'success','FAILED':'danger','CALVED':'info'} %}
+              <tr>
+                <td><a href="/inseminations/{{ r.id }}">{{ r.insemination_date }}</a></td>
+                <td>{{ r.method.value }}</td>
+                <td>{% if r.bull %}<a href="/livestock/{{ r.bull.id }}">{{ r.bull.display_name }}</a>{% else %}—{% endif %}</td>
+                <td><span class="badge bg-{{ sc.get(r.status.value,'secondary') }}">{{ r.status.value.replace('_',' ') }}</span></td>
+                <td>{{ r.expected_calving_date or '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a href="/inseminations?cow_id={{ animal.id }}" class="small">View all</a>
+        {% else %}
+        <p class="text-muted small">No insemination records.</p>
+        {% endif %}
+      </div>
+
+      <!-- Health Records tab -->
+      <div class="tab-pane fade" id="tab-health">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-medium">Recent Health Records</span>
+          {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','VETERINARIAN') %}
+          <a href="/health/new?livestock_id={{ animal.id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Record
+          </a>
+          {% endif %}
+        </div>
+        {% if health_records %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead class="table-light"><tr><th>Date</th><th>Type</th><th>Diagnosis</th><th>Vet</th></tr></thead>
+            <tbody>
+              {% for r in health_records %}
+              {% set tc = {'CHECKUP':'info','TREATMENT':'warning','VACCINATION':'success','DIAGNOSIS':'primary','CALVING':'secondary'} %}
+              <tr>
+                <td><a href="/health/{{ r.id }}">{{ r.record_date }}</a></td>
+                <td><span class="badge bg-{{ tc.get(r.record_type.value,'secondary') }}">{{ r.record_type.value }}</span></td>
+                <td class="small text-muted">{{ (r.diagnosis or '—')[:40] }}</td>
+                <td class="small">{{ r.veterinarian.full_name if r.veterinarian else '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a href="/health?livestock_id={{ animal.id }}" class="small">View all</a>
+        {% else %}
+        <p class="text-muted small">No health records.</p>
+        {% endif %}
+      </div>
+
+      <!-- Appointments tab -->
+      <div class="tab-pane fade" id="tab-appointments">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-medium">Appointments</span>
+          <a href="/appointments/new?livestock_id={{ animal.id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i>New
+          </a>
+        </div>
+        {% if appointments %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead class="table-light"><tr><th>Date</th><th>Type</th><th>Status</th><th>Assignee</th></tr></thead>
+            <tbody>
+              {% for a in appointments %}
+              {% set sc = {'SCHEDULED':'primary','CONFIRMED':'info','COMPLETED':'success','CANCELLED':'secondary'} %}
+              <tr>
+                <td><a href="/appointments/{{ a.id }}">{{ a.scheduled_date }}</a></td>
+                <td><span class="badge bg-secondary">{{ a.appointment_type.value }}</span></td>
+                <td><span class="badge bg-{{ sc.get(a.status.value,'secondary') }}">{{ a.status.value }}</span></td>
+                <td class="small">{{ a.assignee.full_name if a.assignee else '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a href="/appointments?livestock_id={{ animal.id }}" class="small">View all</a>
+        {% else %}
+        <p class="text-muted small">No appointments scheduled.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

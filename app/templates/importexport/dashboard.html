@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Import / Export — Búvoli{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">Import / Export</h2>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Export -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-medium">
+        <i class="bi bi-download me-2"></i>Export Livestock
+      </div>
+      <div class="card-body">
+        <p class="text-muted small">Download all livestock for your JZD as CSV or Excel.</p>
+        <div class="d-grid gap-2">
+          <a href="/import-export/export/csv" class="btn btn-outline-success">
+            <i class="bi bi-filetype-csv me-2"></i>Export CSV
+          </a>
+          <a href="/import-export/export/excel" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-medium">
+        <i class="bi bi-upload me-2"></i>Import Livestock
+      </div>
+      <div class="card-body">
+        {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN') %}
+        <p class="text-muted small">
+          Upload a CSV or Excel file to batch-import animals.
+          <a href="/import-export/template.xlsx" class="fw-medium">Download template</a>.
+        </p>
+        <form method="post" action="/import-export/import" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+          <div>
+            <label class="form-label fw-medium" for="file">File (CSV or .xlsx)</label>
+            <input class="form-control" type="file" id="file" name="file"
+                   accept=".csv,.xlsx" required>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="preview" name="preview" value="1">
+            <label class="form-check-label" for="preview">Preview only (no DB changes)</label>
+          </div>
+          <button class="btn btn-primary" type="submit">
+            <i class="bi bi-upload me-1"></i>Import
+          </button>
+        </form>
+        {% else %}
+        <div class="alert alert-warning mb-0">
+          Only JZD Admins and Super Admins can import livestock.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

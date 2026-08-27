@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{% if farm %}Edit Farm{% else %}New Farm{% endif %} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/farms" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">
+    {% if farm %}Edit: {{ farm.name }}{% else %}New Farm{% endif %}
+  </h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Farm Details</div>
+      <div class="card-body row g-3">
+        <div class="col-md-8">
+          <label class="form-label fw-medium" for="name">
+            Farm Name <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="text" id="name" name="name"
+                 value="{{ farm.name if farm else '' }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="registration_number">
+            Reg. Number
+          </label>
+          <input class="form-control" type="text" id="registration_number"
+                 name="registration_number"
+                 value="{{ farm.registration_number if farm else '' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-medium" for="address">Address</label>
+          <input class="form-control" type="text" id="address" name="address"
+                 value="{{ farm.address if farm else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="city">City</label>
+          <input class="form-control" type="text" id="city" name="city"
+                 value="{{ farm.city if farm else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="postal_code">Postal Code</label>
+          <input class="form-control" type="text" id="postal_code" name="postal_code"
+                 value="{{ farm.postal_code if farm else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="latitude">
+            Latitude <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="number" step="any" id="latitude"
+                 name="latitude" required
+                 value="{{ farm.latitude if farm else '' }}"
+                 placeholder="e.g. 50.0755">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="longitude">
+            Longitude <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="number" step="any" id="longitude"
+                 name="longitude" required
+                 value="{{ farm.longitude if farm else '' }}"
+                 placeholder="e.g. 14.4378">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="contact_phone">Phone</label>
+          <input class="form-control" type="tel" id="contact_phone" name="contact_phone"
+                 value="{{ farm.contact_phone if farm else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="owner_id">Farm Owner</label>
+          <select class="form-select" id="owner_id" name="owner_id">
+            <option value="">— No owner assigned —</option>
+            {% for user in owners %}
+            <option value="{{ user.id }}"
+                    {% if farm and farm.owner_id == user.id %}selected{% endif %}>
+              {{ user.full_name }} ({{ user.username }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if farm %}
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active"
+                   name="is_active" {% if farm.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="d-grid gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg me-1"></i>
+        {% if farm %}Save Changes{% else %}Create Farm{% endif %}
+      </button>
+      <a href="/farms" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

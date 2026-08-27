@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Health Records — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Health Records</h2>
+  {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','VETERINARIAN') %}
+  <a href="/health/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Record
+  </a>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form class="row g-2 align-items-end" method="get">
+      <div class="col-md-4">
+        <label class="form-label small fw-medium">Type</label>
+        <select class="form-select form-select-sm" name="record_type">
+          <option value="">All</option>
+          {% for t in types %}
+          <option {% if t == record_type %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-sm btn-outline-primary">Filter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Animal</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Diagnosis</th>
+          <th>Vet</th>
+          <th>Next Checkup</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        {% set tc = {'CHECKUP':'info','TREATMENT':'warning','VACCINATION':'success','DIAGNOSIS':'primary','CALVING':'secondary'} %}
+        <tr>
+          <td>
+            <a href="/livestock/{{ r.livestock.id }}" class="text-decoration-none fw-medium">
+              {{ r.livestock.display_name }}
+            </a>
+          </td>
+          <td><span class="badge bg-{{ tc.get(r.record_type.value,'secondary') }}">{{ r.record_type.value }}</span></td>
+          <td class="small">{{ r.record_date }}</td>
+          <td class="small text-muted">{{ (r.diagnosis or '—')[:40] }}</td>
+          <td class="small text-muted">
+            {% if r.veterinarian %}{{ r.veterinarian.full_name }}{% else %}—{% endif %}
+          </td>
+          <td class="small text-muted">{{ r.next_checkup_date or '—' }}</td>
+          <td>
+            <a href="/health/{{ r.id }}" class="btn btn-sm btn-outline-secondary">View</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">No health records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

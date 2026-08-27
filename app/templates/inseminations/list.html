@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Inseminations — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Insemination Records</h2>
+  {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','INSEMINATOR','SPERM_COLLECTOR') %}
+  <a href="/inseminations/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> Record Insemination
+  </a>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Cow</th>
+          <th>Bull</th>
+          <th>Date</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Expected Calving</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>
+            <a href="/livestock/{{ r.cow.id }}" class="text-decoration-none fw-medium">
+              {{ r.cow.display_name }}
+            </a>
+          </td>
+          <td class="small text-muted">
+            {% if r.bull %}<a href="/livestock/{{ r.bull.id }}">{{ r.bull.display_name }}</a>{% else %}—{% endif %}
+          </td>
+          <td class="small">{{ r.insemination_date }}</td>
+          <td><span class="badge bg-secondary">{{ r.method.value }}</span></td>
+          <td>
+            {% set sc = {'PERFORMED':'primary','CONFIRMED_PREGNANT':'success','FAILED':'danger','CALVED':'info'} %}
+            <span class="badge bg-{{ sc.get(r.status.value,'secondary') }}">{{ r.status.value.replace('_',' ') }}</span>
+          </td>
+          <td class="small text-muted">{{ r.expected_calving_date or '—' }}</td>
+          <td>
+            <a href="/inseminations/{{ r.id }}" class="btn btn-sm btn-outline-secondary">View</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">No insemination records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

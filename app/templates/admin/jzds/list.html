@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Cooperatives — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Cooperatives (JZDs)</h2>
+  <a href="/admin/jzds/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Cooperative
+  </a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Registration #</th>
+          <th>City</th>
+          <th>Contact</th>
+          <th>Users</th>
+          <th>Gestation / Recovery</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for jzd in jzds %}
+        <tr>
+          <td class="fw-medium">{{ jzd.name }}</td>
+          <td class="text-muted small">{{ jzd.registration_number }}</td>
+          <td>{{ jzd.city or '—' }}</td>
+          <td>
+            {% if jzd.contact_email %}
+            <a href="mailto:{{ jzd.contact_email }}" class="text-decoration-none small">
+              {{ jzd.contact_email }}
+            </a>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ user_counts.get(jzd.id, 0) }}</td>
+          <td class="small text-muted">
+            {% if jzd.settings %}
+              {{ jzd.settings.gestation_days }}d / {{ jzd.settings.recovery_days }}d
+            {% else %}
+              283d / 60d
+            {% endif %}
+          </td>
+          <td>
+            {% if jzd.is_active %}
+            <span class="badge bg-success">Active</span>
+            {% else %}
+            <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="/admin/jzds/{{ jzd.id }}/edit"
+               class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">
+            No cooperatives found. <a href="/admin/jzds/new">Create one</a>.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

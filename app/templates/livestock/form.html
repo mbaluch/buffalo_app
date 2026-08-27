@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}{% if animal %}Edit{% else %}Register{% endif %} Animal — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{% if animal %}/livestock/{{ animal.id }}{% else %}/livestock{% endif %}"
+     class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">
+    {% if animal %}Edit: {{ animal.display_name }}{% else %}Register Animal{% endif %}
+  </h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" class="row g-4">
+  <!-- Basic info -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-medium">Basic Information</div>
+      <div class="card-body row g-3">
+
+        <!-- Registration number -->
+        <div class="col-12" x-data="{ auto: {{ 'false' if animal else 'true' }} }">
+          <label class="form-label fw-medium" for="registration_number">
+            Registration Number <span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <input class="form-control" type="text" id="registration_number"
+                   name="registration_number" maxlength="14"
+                   placeholder="CZ000000000000"
+                   :disabled="auto"
+                   value="{{ animal.registration_number if animal else '' }}"
+                   pattern="CZ\d{12}">
+            {% if not animal %}
+            <div class="input-group-text">
+              <input class="form-check-input mt-0 me-1" type="checkbox"
+                     name="auto_generate" value="1"
+                     x-model="auto" id="auto_generate">
+              <label for="auto_generate" class="small">Auto</label>
+            </div>
+            {% endif %}
+          </div>
+          <div class="form-text">Format: CZ followed by 12 digits (EU Regulation 1760/2000)</div>
+        </div>
+
+        <!-- Name -->
+        <div class="col-12">
+          <label class="form-label fw-medium" for="name">Name (optional)</label>
+          <input class="form-control" type="text" id="name" name="name"
+                 value="{{ animal.name if animal else '' }}"
+                 placeholder="e.g. Bessie">
+        </div>
+
+        <!-- Sex -->
+        <div class="col-md-6">
+          <label class="form-label fw-medium">Sex <span class="text-danger">*</span></label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="sex" id="sex_female"
+                     value="FEMALE"
+                     {% if not animal or animal.sex.value == 'FEMALE' %}checked{% endif %}>
+              <label class="form-check-label" for="sex_female">
+                <i class="bi bi-gender-female text-danger"></i> Cow (Female)
+              </label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="sex" id="sex_male"
+                     value="MALE"
+                     {% if animal and animal.sex.value == 'MALE' %}checked{% endif %}>
+              <label class="form-check-label" for="sex_male">
+                <i class="bi bi-gender-male text-primary"></i> Bull (Male)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farm -->
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="farm_id">
+            Farm <span class="text-danger">*</span>
+          </label>
+          <select class="form-select" id="farm_id" name="farm_id" required>
+            <option value="">— Select farm —</option>
+            {% for farm in farms %}
+            <option value="{{ farm.id }}"
+                    {% if animal and animal.farm_id == farm.id %}selected{% endif %}>
+              {{ farm.name }}{% if farm.city %}, {{ farm.city }}{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Status (edit only) -->
+        {% if animal %}
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="status">Status</label>
+          <select class="form-select" id="status" name="status">
+            {% for s in ['ACTIVE','INACTIVE','SOLD','DECEASED'] %}
+            <option {% if animal.status.value == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <!-- Available for breeding (females only) -->
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="available"
+                   name="is_available_for_breeding"
+                   {% if not animal or animal.is_available_for_breeding %}checked{% endif %}>
+            <label class="form-check-label" for="available">Available for breeding</label>
+            <div class="form-text">Applies to cows only; bulls are always available.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attributes -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-medium">Attributes</div>
+      <div class="card-body row g-3">
+        {% for defn in attr_defs %}
+        <div class="col-12">
+          <label class="form-label fw-medium small" for="attr_{{ defn.attribute_key }}">
+            {{ defn.attribute_name }}
+            {% if defn.unit %}<span class="text-muted">({{ defn.unit }})</span>{% endif %}
+            {% if defn.is_required %}<span class="text-danger">*</span>{% endif %}
+          </label>
+
+          {% set current_val = animal.attributes.get(defn.attribute_key, '') if animal else '' %}
+
+          {% if defn.data_type.value == 'ENUM' %}
+          <select class="form-select form-select-sm" name="attr_{{ defn.attribute_key }}"
+                  {% if defn.is_required %}required{% endif %}>
+            <option value="">— Select —</option>
+            {% for opt in (defn.enum_values or []) %}
+            <option {% if current_val == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+
+          {% elif defn.data_type.value == 'DATE' %}
+          <input class="form-control form-control-sm" type="date"
+                 name="attr_{{ defn.attribute_key }}"
+                 value="{{ current_val }}"
+                 {% if defn.is_required %}required{% endif %}>
+
+          {% elif defn.data_type.value in ('NUMBER','DECIMAL') %}
+          {% set rules = defn.validation_rules or {} %}
+          <input class="form-control form-control-sm" type="number" step="any"
+                 name="attr_{{ defn.attribute_key }}"
+                 value="{{ current_val }}"
+                 {% if rules.get('min') is not none %}min="{{ rules.min }}"{% endif %}
+                 {% if rules.get('max') is not none %}max="{{ rules.max }}"{% endif %}
+                 {% if defn.is_required %}required{% endif %}
+                 placeholder="{{ defn.unit or '' }}">
+
+          {% elif defn.data_type.value == 'BOOLEAN' %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox"
+                   name="attr_{{ defn.attribute_key }}" value="true"
+                   {% if current_val == 'true' or current_val == True %}checked{% endif %}>
+          </div>
+
+          {% else %}
+          <input class="form-control form-control-sm" type="text"
+                 name="attr_{{ defn.attribute_key }}"
+                 value="{{ current_val }}"
+                 {% if defn.is_required %}required{% endif %}>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary" type="submit">
+      <i class="bi bi-check-lg me-1"></i>
+      {% if animal %}Save Changes{% else %}Register Animal{% endif %}
+    </button>
+    <a href="{% if animal %}/livestock/{{ animal.id }}{% else %}/livestock{% endif %}"
+       class="btn btn-outline-secondary">Cancel</a>
+  </div>
+</form>
+{% endblock %}

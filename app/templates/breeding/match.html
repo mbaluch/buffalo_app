@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Breeding Match Planner — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <h2 class="fw-bold mb-0">Breeding Match Planner</h2>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-medium">Search Parameters</div>
+  <div class="card-body">
+    <form method="post" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-medium">Specific Cow ID (optional)</label>
+        <input class="form-control" type="number" name="cow_id"
+               value="{{ cow_id or '' }}" placeholder="Leave blank for all cows">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-medium">Max Distance (km)</label>
+        <input class="form-control" type="number" step="0.1" name="max_distance_km"
+               value="{{ max_distance_km or '' }}" placeholder="No limit">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-medium">Top N per cow</label>
+        <input class="form-control" type="number" name="top_n"
+               value="{{ top_n or 10 }}" min="1" max="50">
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-primary w-100">
+          <i class="bi bi-search me-1"></i> Find Matches
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if searched %}
+  {% if results %}
+  <div class="card shadow-sm">
+    <div class="card-header fw-medium d-flex justify-content-between">
+      <span>Results — {{ results|length }} pair(s)</span>
+      <small class="text-muted">Sorted by score descending per cow</small>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Cow</th>
+            <th>Bull</th>
+            <th>Score</th>
+            <th>Distance</th>
+            <th>Breed Match</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          <tr>
+            <td>
+              <a href="/livestock/{{ r.cow_id }}" class="text-decoration-none fw-medium">
+                {{ r.cow_name or r.cow_reg }}
+              </a>
+              <div class="small text-muted">{{ r.cow_reg }}</div>
+            </td>
+            <td>
+              <a href="/livestock/{{ r.bull_id }}" class="text-decoration-none fw-medium">
+                {{ r.bull_name or r.bull_reg }}
+              </a>
+              <div class="small text-muted">{{ r.bull_reg }}</div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:8px;min-width:80px">
+                  <div class="progress-bar
+                    {% if r.score >= 70 %}bg-success{% elif r.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                    style="width:{{ r.score }}%"></div>
+                </div>
+                <span class="fw-bold">{{ r.score }}</span>
+              </div>
+            </td>
+            <td class="small text-muted">
+              {% if r.distance_km is not none %}{{ r.distance_km }} km{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if r.score_details and r.score_details.breed_match > 0 %}
+              <span class="badge bg-success"><i class="bi bi-check-lg"></i> Same breed</span>
+              {% else %}
+              <span class="badge bg-secondary">Different breed</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="/inseminations/new?cow_id={{ r.cow_id }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Inseminate
+              </a>
+              <a href="/appointments/new?livestock_id={{ r.cow_id }}" class="btn btn-sm btn-outline-secondary ms-1">
+                <i class="bi bi-calendar-plus me-1"></i>Appt
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    No eligible cow–bull pairs found with the given criteria.
+    Try removing the distance filter or broadening the selection.
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

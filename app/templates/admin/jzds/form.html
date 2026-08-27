@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{% if jzd %}Edit{% else %}New{% endif %} Cooperative — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/admin/jzds" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h2 class="fw-bold mb-0">
+    {% if jzd %}Edit: {{ jzd.name }}{% else %}New Cooperative{% endif %}
+  </h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Basic Information</div>
+      <div class="card-body row g-3">
+        {% if not jzd %}
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="registration_number">
+            Registration Number <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="text" id="registration_number"
+                 name="registration_number" required
+                 value="{{ jzd.registration_number if jzd else '' }}"
+                 placeholder="e.g. JZD-2026-001">
+        </div>
+        {% endif %}
+        <div class="col-md-{% if jzd %}12{% else %}6{% endif %}">
+          <label class="form-label fw-medium" for="name">
+            Name <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="text" id="name" name="name" required
+                 value="{{ jzd.name if jzd else '' }}" placeholder="Cooperative name">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-medium" for="address">Address</label>
+          <input class="form-control" type="text" id="address" name="address"
+                 value="{{ jzd.address if jzd else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="city">City</label>
+          <input class="form-control" type="text" id="city" name="city"
+                 value="{{ jzd.city if jzd else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="postal_code">Postal Code</label>
+          <input class="form-control" type="text" id="postal_code" name="postal_code"
+                 value="{{ jzd.postal_code if jzd else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="contact_phone">Phone</label>
+          <input class="form-control" type="tel" id="contact_phone" name="contact_phone"
+                 value="{{ jzd.contact_phone if jzd else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="contact_email">Email</label>
+          <input class="form-control" type="email" id="contact_email" name="contact_email"
+                 value="{{ jzd.contact_email if jzd else '' }}">
+        </div>
+        {% if jzd %}
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                   {% if jzd.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Biology Settings</div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          Configurable defaults for pregnancy tracking within this cooperative.
+        </p>
+        <div class="mb-3">
+          <label class="form-label fw-medium" for="gestation_days">
+            Gestation period (days)
+          </label>
+          <input class="form-control" type="number" id="gestation_days"
+                 name="gestation_days" min="200" max="400"
+                 value="{{ jzd.settings.gestation_days if jzd and jzd.settings else 283 }}">
+          <div class="form-text">Default: 283 days</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-medium" for="recovery_days">
+            Post-calving recovery (days)
+          </label>
+          <input class="form-control" type="number" id="recovery_days"
+                 name="recovery_days" min="0" max="365"
+                 value="{{ jzd.settings.recovery_days if jzd and jzd.settings else 60 }}">
+          <div class="form-text">Default: 60 days</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid mt-3 gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg me-1"></i>
+        {% if jzd %}Save Changes{% else %}Create Cooperative{% endif %}
+      </button>
+      <a href="/admin/jzds" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

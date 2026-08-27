@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Appointment #{{ appt.id }} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/appointments" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">Appointment #{{ appt.id }}</h2>
+  {% set sc = {'SCHEDULED':'primary','CONFIRMED':'info','COMPLETED':'success','CANCELLED':'secondary'} %}
+  <span class="badge bg-{{ sc.get(appt.status.value,'secondary') }} fs-6">{{ appt.status.value }}</span>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium">Details</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Animal</dt>
+          <dd class="col-sm-8">
+            <a href="/livestock/{{ appt.livestock.id }}">{{ appt.livestock.display_name }}</a>
+          </dd>
+          <dt class="col-sm-4">Type</dt>
+          <dd class="col-sm-8"><span class="badge bg-secondary">{{ appt.appointment_type.value }}</span></dd>
+          <dt class="col-sm-4">Scheduled</dt>
+          <dd class="col-sm-8">{{ appt.scheduled_date }} at {{ appt.scheduled_time.strftime('%H:%M') }}</dd>
+          <dt class="col-sm-4">Duration</dt>
+          <dd class="col-sm-8">{{ appt.duration_minutes }} min</dd>
+          <dt class="col-sm-4">Requested by</dt>
+          <dd class="col-sm-8">{{ appt.requester.full_name }}</dd>
+          <dt class="col-sm-4">Assignee</dt>
+          <dd class="col-sm-8">{{ appt.assignee.full_name if appt.assignee else '—' }}</dd>
+          {% if appt.notes %}
+          <dt class="col-sm-4">Notes</dt>
+          <dd class="col-sm-8">{{ appt.notes }}</dd>
+          {% endif %}
+          {% if appt.cancellation_reason %}
+          <dt class="col-sm-4">Cancellation reason</dt>
+          <dd class="col-sm-8 text-danger">{{ appt.cancellation_reason }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    {% if appt.status.value not in ('COMPLETED', 'CANCELLED') %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium">Update Status</div>
+      <div class="card-body">
+        <form method="post" action="/appointments/{{ appt.id }}/status" class="d-flex flex-column gap-2">
+          <select class="form-select" name="new_status">
+            {% for s in statuses %}
+            <option {% if s == appt.status.value %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <input class="form-control" type="text" name="cancellation_reason"
+                 placeholder="Cancellation reason (if cancelled)">
+          <button class="btn btn-primary btn-sm">Update</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.role.value in ('SUPER_ADMIN', 'JZD_ADMIN') %}
+    <form method="post" action="/appointments/{{ appt.id }}/delete"
+          onsubmit="return confirm('Delete this appointment?')">
+      <button class="btn btn-outline-danger btn-sm w-100">
+        <i class="bi bi-trash me-1"></i> Delete
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

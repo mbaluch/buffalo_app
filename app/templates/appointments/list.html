@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Appointments — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Appointments</h2>
+  <a href="/appointments/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Appointment
+  </a>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form class="row g-2 align-items-end" method="get">
+      <div class="col-md-3">
+        <label class="form-label small fw-medium">Status</label>
+        <select class="form-select form-select-sm" name="status">
+          <option value="">All</option>
+          {% for s in statuses %}
+          <option {% if s == status %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-medium">From</label>
+        <input class="form-control form-control-sm" type="date" name="from_date"
+               value="{{ from_date or '' }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-medium">To</label>
+        <input class="form-control form-control-sm" type="date" name="to_date"
+               value="{{ to_date or '' }}">
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-sm btn-outline-primary w-100">Filter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Animal</th>
+          <th>Type</th>
+          <th>Date / Time</th>
+          <th>Status</th>
+          <th>Assignee</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appts %}
+        <tr>
+          <td>
+            <a href="/livestock/{{ a.livestock.id }}" class="text-decoration-none fw-medium">
+              {{ a.livestock.display_name }}
+            </a>
+          </td>
+          <td><span class="badge bg-secondary">{{ a.appointment_type.value }}</span></td>
+          <td class="small">
+            {{ a.scheduled_date }}<br>
+            <span class="text-muted">{{ a.scheduled_time.strftime('%H:%M') }}</span>
+          </td>
+          <td>
+            {% set sc = {'SCHEDULED':'primary','CONFIRMED':'info','COMPLETED':'success','CANCELLED':'secondary'} %}
+            <span class="badge bg-{{ sc.get(a.status.value,'secondary') }}">{{ a.status.value }}</span>
+          </td>
+          <td class="small text-muted">
+            {% if a.assignee %}{{ a.assignee.full_name }}{% else %}—{% endif %}
+          </td>
+          <td>
+            <a href="/appointments/{{ a.id }}" class="btn btn-sm btn-outline-secondary">View</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">No appointments found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

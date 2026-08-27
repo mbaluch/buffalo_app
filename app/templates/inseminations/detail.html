@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Insemination #{{ record.id }} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/inseminations" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">Insemination Record #{{ record.id }}</h2>
+  {% set sc = {'PERFORMED':'primary','CONFIRMED_PREGNANT':'success','FAILED':'danger','CALVED':'info'} %}
+  <span class="badge bg-{{ sc.get(record.status.value,'secondary') }} fs-6">
+    {{ record.status.value.replace('_',' ') }}
+  </span>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium">Details</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Cow</dt>
+          <dd class="col-sm-8">
+            <a href="/livestock/{{ record.cow.id }}">{{ record.cow.display_name }}</a>
+          </dd>
+          <dt class="col-sm-4">Bull</dt>
+          <dd class="col-sm-8">
+            {% if record.bull %}<a href="/livestock/{{ record.bull.id }}">{{ record.bull.display_name }}</a>
+            {% else %}— (AI straw or unknown){% endif %}
+          </dd>
+          <dt class="col-sm-4">Method</dt>
+          <dd class="col-sm-8"><span class="badge bg-secondary">{{ record.method.value }}</span></dd>
+          <dt class="col-sm-4">Insemination Date</dt>
+          <dd class="col-sm-8">{{ record.insemination_date }}</dd>
+          <dt class="col-sm-4">Expected Calving</dt>
+          <dd class="col-sm-8">{{ record.expected_calving_date or '—' }}</dd>
+          <dt class="col-sm-4">Actual Calving</dt>
+          <dd class="col-sm-8">{{ record.actual_calving_date or '—' }}</dd>
+          <dt class="col-sm-4">Pregnancy confirmed</dt>
+          <dd class="col-sm-8">
+            {% if record.pregnancy_confirmed_date %}
+              {{ record.pregnancy_confirmed_date }} by {{ record.pregnancy_confirmed_by.full_name if record.pregnancy_confirmed_by else '—' }}
+            {% else %}Not confirmed{% endif %}
+          </dd>
+          <dt class="col-sm-4">Inseminator</dt>
+          <dd class="col-sm-8">{{ record.inseminator.full_name if record.inseminator else '—' }}</dd>
+          {% if record.notes %}
+          <dt class="col-sm-4">Notes</dt>
+          <dd class="col-sm-8">{{ record.notes }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    {% if can_confirm and record.status.value == 'PERFORMED' %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium text-success">Confirm Pregnancy</div>
+      <div class="card-body">
+        <form method="post" action="/inseminations/{{ record.id }}/confirm-pregnancy">
+          <label class="form-label small fw-medium">Confirmation Date</label>
+          <input class="form-control form-control-sm mb-2" type="date" name="confirmed_date" required>
+          <button class="btn btn-success btn-sm w-100">Confirm Pregnant</button>
+        </form>
+      </div>
+    </div>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium text-danger">Mark as Failed</div>
+      <div class="card-body">
+        <form method="post" action="/inseminations/{{ record.id }}/mark-failed"
+              onsubmit="return confirm('Mark this insemination as failed?')">
+          <button class="btn btn-outline-danger btn-sm w-100">Mark Failed</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

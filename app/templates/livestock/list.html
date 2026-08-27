@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Livestock — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="fw-bold mb-0">Livestock</h2>
+  {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','FARM_OWNER') %}
+  <a href="/livestock/new" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> Register Animal
+  </a>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <!-- Filter sidebar -->
+  <div class="col-md-3">
+    <form method="get" action="/livestock" id="filter-form">
+      <div class="card shadow-sm">
+        <div class="card-header fw-medium d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-funnel me-1"></i>Filters</span>
+          <a href="/livestock" class="btn btn-sm btn-link p-0 text-muted">Clear</a>
+        </div>
+        <div class="card-body">
+
+          <!-- Free text -->
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Search</label>
+            <input class="form-control form-control-sm" name="q"
+                   placeholder="Name or registration #"
+                   value="{{ filters.q }}">
+          </div>
+
+          <!-- Sex -->
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Type</label>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="javascript:void(0)" onclick="setFilter('sex','')"
+                 class="badge {% if not filters.sex %}bg-primary{% else %}bg-secondary{% endif %} text-decoration-none">
+                All
+              </a>
+              <a href="javascript:void(0)" onclick="setFilter('sex','FEMALE')"
+                 class="badge {% if filters.sex=='FEMALE' %}bg-primary{% else %}bg-secondary{% endif %} text-decoration-none">
+                Cows
+              </a>
+              <a href="javascript:void(0)" onclick="setFilter('sex','MALE')"
+                 class="badge {% if filters.sex=='MALE' %}bg-primary{% else %}bg-secondary{% endif %} text-decoration-none">
+                Bulls
+              </a>
+            </div>
+            <input type="hidden" name="sex" value="{{ filters.sex }}">
+          </div>
+
+          <!-- Available for breeding -->
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="available"
+                     name="available_for_breeding" value="1"
+                     {% if filters.available_for_breeding == '1' %}checked{% endif %}
+                     onchange="document.getElementById('filter-form').submit()">
+              <label class="form-check-label small" for="available">
+                Available for breeding
+              </label>
+            </div>
+          </div>
+
+          <!-- Farm -->
+          {% if farms %}
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Farm</label>
+            <select class="form-select form-select-sm" name="farm_id"
+                    onchange="document.getElementById('filter-form').submit()">
+              <option value="">All farms</option>
+              {% for farm in farms %}
+              <option value="{{ farm.id }}"
+                      {% if filters.farm_id == farm.id|string %}selected{% endif %}>
+                {{ farm.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <!-- Breed -->
+          {% if breed_options %}
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Breed</label>
+            <select class="form-select form-select-sm" name="breed"
+                    onchange="document.getElementById('filter-form').submit()">
+              <option value="">All breeds</option>
+              {% for b in breed_options %}
+              <option {% if filters.breed == b %}selected{% endif %}>{{ b }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <!-- Weight range -->
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Weight (kg)</label>
+            <div class="input-group input-group-sm">
+              <input class="form-control" type="number" name="min_weight" placeholder="Min"
+                     value="{{ filters.min_weight }}">
+              <span class="input-group-text">–</span>
+              <input class="form-control" type="number" name="max_weight" placeholder="Max"
+                     value="{{ filters.max_weight }}">
+            </div>
+          </div>
+
+          <!-- Height range -->
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Height (cm)</label>
+            <div class="input-group input-group-sm">
+              <input class="form-control" type="number" name="min_height" placeholder="Min"
+                     value="{{ filters.min_height }}">
+              <span class="input-group-text">–</span>
+              <input class="form-control" type="number" name="max_height" placeholder="Max"
+                     value="{{ filters.max_height }}">
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-sm w-100" type="submit">Apply Filters</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <div class="col-md-9">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <small class="text-muted">
+        Showing {{ livestock_list|length }} of {{ total }} animals
+        (page {{ page }} of {{ total_pages }})
+      </small>
+    </div>
+
+    {% if livestock_list %}
+    <div class="row g-3">
+      {% for animal in livestock_list %}
+      <div class="col-sm-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <!-- Photo -->
+          <a href="/livestock/{{ animal.id }}">
+            {% if animal.primary_photo %}
+            <img src="/livestock/{{ animal.id }}/photos/{{ animal.primary_photo.id }}/thumbnail"
+                 class="card-img-top card-photo" alt="{{ animal.display_name }}">
+            {% else %}
+            <div class="card-photo bg-light d-flex align-items-center justify-content-center text-muted">
+              <i class="bi bi-camera fs-1"></i>
+            </div>
+            {% endif %}
+          </a>
+          <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <a href="/livestock/{{ animal.id }}" class="fw-bold text-decoration-none">
+                  {{ animal.display_name }}
+                </a>
+                <div class="text-muted small">{{ animal.registration_number }}</div>
+              </div>
+              {% if animal.pregnancy_status and animal.pregnancy_status.value == 'PREGNANT' %}
+              <span class="badge badge-pregnant">Pregnant</span>
+              {% elif animal.is_available_for_breeding and animal.sex.value == 'FEMALE' %}
+              <span class="badge badge-available">Available</span>
+              {% elif not animal.is_available_for_breeding %}
+              <span class="badge badge-unavailable">Unavailable</span>
+              {% endif %}
+            </div>
+            <div class="mt-1 small text-muted">
+              <i class="bi bi-{{ 'gender-female' if animal.sex.value == 'FEMALE' else 'gender-male' }}"></i>
+              {{ animal.type_label }}
+              {% if animal.attributes.get('breed') %}· {{ animal.attributes.breed }}{% endif %}
+              {% if animal.attributes.get('weight') %}· {{ animal.attributes.weight }}kg{% endif %}
+            </div>
+            {% if animal.farm %}
+            <div class="mt-1 small text-muted">
+              <i class="bi bi-geo-alt"></i> {{ animal.farm.name }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+      <ul class="pagination pagination-sm justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.url.query | replace('page=' ~ page, 'page=' ~ (page-1)) }}">
+            &laquo;
+          </a>
+        </li>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?{{ request.url.query | replace('page=' ~ page, 'page=' ~ p) if 'page=' in request.url.query else request.url.query ~ '&page=' ~ p }}">
+            {{ p }}
+          </a>
+        </li>
+        {% endfor %}
+        {% if page < total_pages %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.url.query | replace('page=' ~ page, 'page=' ~ (page+1)) }}">
+            &raquo;
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card">
+      <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-search fs-1 d-block mb-2"></i>
+        <p class="mb-1">No animals found matching your filters.</p>
+        <a href="/livestock" class="btn btn-sm btn-outline-secondary">Clear filters</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function setFilter(name, value) {
+  const form = document.getElementById('filter-form');
+  form.querySelector('[name="' + name + '"]').value = value;
+  form.submit();
+}
+</script>
+{% endblock %}

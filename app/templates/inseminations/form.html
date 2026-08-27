@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Record Insemination — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/inseminations" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">Record Insemination</h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger"><ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Insemination Details</div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="cow_id">Cow <span class="text-danger">*</span></label>
+          <select class="form-select" id="cow_id" name="cow_id" required>
+            <option value="">— Select cow —</option>
+            {% for c in cows %}
+            <option value="{{ c.id }}"
+                    {% if preselected_cow_id and c.id == preselected_cow_id %}selected{% endif %}>
+              {{ c.display_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="bull_id">Bull (optional)</label>
+          <select class="form-select" id="bull_id" name="bull_id">
+            <option value="">— No bull / AI straw —</option>
+            {% for b in bulls %}
+            <option value="{{ b.id }}">{{ b.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="method">Method <span class="text-danger">*</span></label>
+          <select class="form-select" id="method" name="method" required>
+            {% for m in methods %}
+            <option>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="insemination_date">Date <span class="text-danger">*</span></label>
+          <input class="form-control" type="date" id="insemination_date" name="insemination_date" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-medium" for="notes">Notes</label>
+          <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="d-grid gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg me-1"></i> Record Insemination
+      </button>
+      <a href="/inseminations" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

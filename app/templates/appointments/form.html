@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{% if appt %}Edit Appointment{% else %}New Appointment{% endif %} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/appointments" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">{% if appt %}Edit Appointment{% else %}New Appointment{% endif %}</h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger"><ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Appointment Details</div>
+      <div class="card-body row g-3">
+        <div class="col-md-8">
+          <label class="form-label fw-medium" for="livestock_id">Animal <span class="text-danger">*</span></label>
+          <select class="form-select" id="livestock_id" name="livestock_id" required>
+            <option value="">— Select animal —</option>
+            {% for a in animals %}
+            <option value="{{ a.id }}"
+                    {% if preselected_livestock_id and a.id == preselected_livestock_id %}selected{% endif %}
+                    {% if appt and appt.livestock_id == a.id %}selected{% endif %}>
+              {{ a.display_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="appointment_type">Type <span class="text-danger">*</span></label>
+          <select class="form-select" id="appointment_type" name="appointment_type" required>
+            {% for t in types %}
+            <option {% if appt and appt.appointment_type.value == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="scheduled_date">Date <span class="text-danger">*</span></label>
+          <input class="form-control" type="date" id="scheduled_date" name="scheduled_date" required
+                 value="{{ appt.scheduled_date if appt else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="scheduled_time">Time <span class="text-danger">*</span></label>
+          <input class="form-control" type="time" id="scheduled_time" name="scheduled_time" required
+                 value="{{ appt.scheduled_time.strftime('%H:%M') if appt else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-medium" for="duration_minutes">Duration (min)</label>
+          <input class="form-control" type="number" id="duration_minutes" name="duration_minutes"
+                 value="{{ appt.duration_minutes if appt else 60 }}" min="15" step="15">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-medium" for="notes">Notes</label>
+          <textarea class="form-control" id="notes" name="notes" rows="3">{{ appt.notes if appt else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="d-grid gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg me-1"></i>
+        {% if appt %}Save Changes{% else %}Create Appointment{% endif %}
+      </button>
+      <a href="/appointments" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

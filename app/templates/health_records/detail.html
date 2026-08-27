@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Health Record #{{ record.id }} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/health" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h2 class="fw-bold mb-0">Health Record #{{ record.id }}</h2>
+  {% set tc = {'CHECKUP':'info','TREATMENT':'warning','VACCINATION':'success','DIAGNOSIS':'primary','CALVING':'secondary'} %}
+  <span class="badge bg-{{ tc.get(record.record_type.value,'secondary') }} fs-6">{{ record.record_type.value }}</span>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-medium">Details</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Animal</dt>
+          <dd class="col-sm-8">
+            <a href="/livestock/{{ record.livestock.id }}">{{ record.livestock.display_name }}</a>
+          </dd>
+          <dt class="col-sm-4">Date</dt>
+          <dd class="col-sm-8">{{ record.record_date }}</dd>
+          <dt class="col-sm-4">Veterinarian</dt>
+          <dd class="col-sm-8">{{ record.veterinarian.full_name if record.veterinarian else '—' }}</dd>
+          {% if record.temperature %}
+          <dt class="col-sm-4">Temperature</dt>
+          <dd class="col-sm-8">{{ record.temperature }} °C</dd>
+          {% endif %}
+          {% if record.weight_at_record %}
+          <dt class="col-sm-4">Weight</dt>
+          <dd class="col-sm-8">{{ record.weight_at_record }} kg</dd>
+          {% endif %}
+          {% if record.diagnosis %}
+          <dt class="col-sm-4">Diagnosis</dt>
+          <dd class="col-sm-8">{{ record.diagnosis }}</dd>
+          {% endif %}
+          {% if record.treatment %}
+          <dt class="col-sm-4">Treatment</dt>
+          <dd class="col-sm-8">{{ record.treatment }}</dd>
+          {% endif %}
+          {% if record.medication %}
+          <dt class="col-sm-4">Medication</dt>
+          <dd class="col-sm-8">{{ record.medication }}{% if record.dosage %} — {{ record.dosage }}{% endif %}</dd>
+          {% endif %}
+          {% if record.next_checkup_date %}
+          <dt class="col-sm-4">Next Checkup</dt>
+          <dd class="col-sm-8">{{ record.next_checkup_date }}</dd>
+          {% endif %}
+          {% if record.notes %}
+          <dt class="col-sm-4">Notes</dt>
+          <dd class="col-sm-8">{{ record.notes }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    {% if current_user.role.value in ('SUPER_ADMIN','JZD_ADMIN','VETERINARIAN') %}
+    <div class="d-grid gap-2">
+      <a href="/health/{{ record.id }}/edit" class="btn btn-outline-primary">
+        <i class="bi bi-pencil me-1"></i> Edit
+      </a>
+      <form method="post" action="/health/{{ record.id }}/delete"
+            onsubmit="return confirm('Delete this health record?')">
+        <button class="btn btn-outline-danger w-100">
+          <i class="bi bi-trash me-1"></i> Delete
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-0">Dashboard</h2>
+    <p class="text-muted mb-0">
+      Welcome back, {{ current_user.full_name }}
+      {% if current_user.jzd %}— {{ current_user.jzd.name }}{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-hammer fs-1 d-block mb-3"></i>
+    <h5>Phase 2 coming soon</h5>
+    <p class="mb-0">Livestock management features are being built.</p>
+  </div>
+</div>
+{% endblock %}

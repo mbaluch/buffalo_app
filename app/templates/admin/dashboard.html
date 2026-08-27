@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">Dashboard</h2>
+  <span class="text-muted small">System overview</span>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card stat-card primary h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Cooperatives (JZDs)</div>
+            <div class="fs-2 fw-bold">{{ total_jzds }}</div>
+          </div>
+          <i class="bi bi-building fs-2 text-primary opacity-50"></i>
+        </div>
+        <small class="text-success">{{ active_jzds }} active</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card stat-card success h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Total Users</div>
+            <div class="fs-2 fw-bold">{{ total_users }}</div>
+          </div>
+          <i class="bi bi-people fs-2 text-success opacity-50"></i>
+        </div>
+        <small class="text-muted">across all JZDs</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card stat-card warning h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-muted small">Your role</div>
+            <div class="fs-4 fw-bold">{{ current_user.role.value }}</div>
+          </div>
+          <i class="bi bi-shield-check fs-2 text-warning opacity-50"></i>
+        </div>
+        <small class="text-muted">{{ current_user.username }}</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-medium">
+        <i class="bi bi-building me-1"></i> Cooperatives
+      </div>
+      <div class="card-body">
+        <a href="/admin/jzds/new" class="btn btn-primary btn-sm mb-3">
+          <i class="bi bi-plus"></i> New Cooperative
+        </a>
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Users</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for jzd in jzds[:5] %}
+            <tr>
+              <td>
+                <a href="/admin/jzds/{{ jzd.id }}/edit" class="text-decoration-none">
+                  {{ jzd.name }}
+                </a>
+              </td>
+              <td>{{ user_counts.get(jzd.id, 0) }}</td>
+              <td>
+                {% if jzd.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-muted small">No cooperatives yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if jzds|length > 5 %}
+        <a href="/admin/jzds" class="btn btn-link btn-sm p-0 mt-2">
+          View all {{ jzds|length }} →
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-medium">
+        <i class="bi bi-people me-1"></i> Recent Users
+      </div>
+      <div class="card-body">
+        <a href="/admin/users/new" class="btn btn-primary btn-sm mb-3">
+          <i class="bi bi-plus"></i> New User
+        </a>
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users[:5] %}
+            <tr>
+              <td>
+                <a href="/admin/users/{{ user.id }}/edit" class="text-decoration-none">
+                  {{ user.full_name }}
+                </a>
+                <div class="text-muted small">{{ user.username }}</div>
+              </td>
+              <td><span class="badge bg-secondary small">{{ user.role.value }}</span></td>
+              <td>
+                {% if user.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-muted small">No users yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if users|length > 5 %}
+        <a href="/admin/users" class="btn btn-link btn-sm p-0 mt-2">
+          View all {{ users|length }} →
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

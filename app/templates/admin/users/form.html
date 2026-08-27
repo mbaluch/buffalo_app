@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{% if user %}Edit User{% else %}New User{% endif %} — Búvoli{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/admin/users" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h2 class="fw-bold mb-0">
+    {% if user %}Edit: {{ user.full_name }}{% else %}New User{% endif %}
+  </h2>
+</div>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" class="row g-4" x-data="{ role: '{{ user.role.value if user else '' }}' }">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Account Details</div>
+      <div class="card-body row g-3">
+        {% if not user %}
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="username">
+            Username <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="text" id="username" name="username"
+                 required minlength="3" maxlength="100" autofocus>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="password">
+            Password <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="password" id="password" name="password"
+                 required minlength="8" placeholder="Min. 8 characters">
+          <div class="form-text">Sent to user by email after creation.</div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="first_name">First Name</label>
+          <input class="form-control" type="text" id="first_name" name="first_name"
+                 value="{{ user.first_name if user else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="last_name">Last Name</label>
+          <input class="form-control" type="text" id="last_name" name="last_name"
+                 value="{{ user.last_name if user else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="email">
+            Email <span class="text-danger">*</span>
+          </label>
+          <input class="form-control" type="email" id="email" name="email" required
+                 value="{{ user.email if user else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-medium" for="phone">Phone</label>
+          <input class="form-control" type="tel" id="phone" name="phone"
+                 value="{{ user.phone if user else '' }}">
+        </div>
+
+        {% if user %}
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                   {% if user.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header fw-medium">Role & Access</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-medium" for="role">
+            Role <span class="text-danger">*</span>
+          </label>
+          <select class="form-select" id="role" name="role" required
+                  x-model="role">
+            <option value="">— Select role —</option>
+            {% for r in roles %}
+            <option value="{{ r.value }}"
+              {% if user and user.role == r %}selected{% endif %}>
+              {{ r.value }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3" x-show="role !== 'SUPER_ADMIN'">
+          <label class="form-label fw-medium" for="jzd_id">
+            Cooperative (JZD)
+          </label>
+          <select class="form-select" id="jzd_id" name="jzd_id"
+                  :required="role !== 'SUPER_ADMIN'">
+            <option value="">— Select cooperative —</option>
+            {% for jzd in jzds %}
+            <option value="{{ jzd.id }}"
+              {% if user and user.jzd_id == jzd.id %}selected{% endif %}>
+              {{ jzd.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid mt-3 gap-2">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check-lg me-1"></i>
+        {% if user %}Save Changes{% else %}Create User{% endif %}
+      </button>
+      <a href="/admin/users" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
